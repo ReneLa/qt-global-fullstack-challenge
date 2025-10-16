@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { hashEmail, signHash } from "../utils/user-signing.js";
 
 const prisma = new PrismaClient();
 
@@ -8,6 +9,8 @@ interface User {
   role: "ADMIN" | "USER";
   status: "ACTIVE" | "INACTIVE";
   createdAt: Date;
+  hash: string;
+  signature: string;
 }
 
 interface UserInput {
@@ -17,13 +20,17 @@ interface UserInput {
 }
 
 export async function createUser(userInput: UserInput) {
-  //TODO: Handle email hashing and signing
+  const hash = hashEmail(userInput.email);
+
+  const signature = signHash(hash);
 
   const user = await prisma.user.create({
     data: {
       email: userInput.email,
       role: userInput.role,
-      status: userInput.status
+      status: userInput.status,
+      hash,
+      signature
     }
   });
 

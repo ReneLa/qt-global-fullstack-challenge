@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { createSign, generateKeyPairSync } from "crypto";
+import { createSign, generateKeyPairSync, createHash } from "crypto";
 
 // ES module __dirname workaround
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -42,4 +42,9 @@ export function signHash(hexHash: string) {
 
   const signature = sign.sign(privateKey, "base64");
   return signature;
+}
+
+// Hash a user's email using SHA384
+export function hashEmail(email: string) {
+  return createHash("sha384").update(email).digest("hex");
 }

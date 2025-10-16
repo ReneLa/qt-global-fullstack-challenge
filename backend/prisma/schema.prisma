@@ -27,4 +27,6 @@ model User {
   role Role @default(USER)
   status Status @default(ACTIVE)
   createdAt DateTime @default(now())
+  hash String
+  signature String
 }
