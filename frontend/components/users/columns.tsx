@@ -12,7 +12,8 @@ export type User = {
   role: "ADMIN" | "USER";
   status: "ACTIVE" | "INACTIVE";
   email: string;
-  hash?: string;
+  hash: string;
+  createdAt: string;
 };
 
 // Utility function to mask hash: show first 3 and last 3, hide the rest
