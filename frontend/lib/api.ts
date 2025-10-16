@@ -22,6 +22,7 @@ async function fetchApi<T = any>(
 
 export const api = {
   getUsers: () => fetchApi("/users"),
+  getWeeklyStats: () => fetchApi("/users/weekly-stats"),
   createUser: ({
     email,
     role,

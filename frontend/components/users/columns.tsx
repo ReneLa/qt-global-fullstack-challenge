@@ -12,6 +12,18 @@ export type User = {
   role: "ADMIN" | "USER";
   status: "ACTIVE" | "INACTIVE";
   email: string;
+  hash?: string;
+};
+
+// Utility function to mask hash: show first 3 and last 3, hide the rest
+const maskHash = (hash: string | undefined): string => {
+  if (!hash) return "N/A";
+  if (hash.length <= 6) return hash;
+
+  const first3 = hash.slice(0, 3);
+  const last3 = hash.slice(-3);
+
+  return `${first3}...${last3}`;
 };
 
 export const columns: ColumnDef<User>[] = [
@@ -54,12 +66,24 @@ export const columns: ColumnDef<User>[] = [
     cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>
   },
   {
+    accessorKey: "hash",
+    header: "Hash",
+    cell: ({ row }) => {
+      const hash = row.getValue("hash") as string | undefined;
+      return (
+        <div className="font-mono text-sm text-muted-foreground">
+          {maskHash(hash)}
+        </div>
+      );
+    }
+  },
+  {
     accessorKey: "role",
-    header: () => <div className="text-right">Role</div>,
+    header: () => <div>Role</div>,
     cell: ({ row }) => {
       const role = row.getValue("role") as string;
 
-      return <div className="text-right font-medium">{role}</div>;
+      return <div className=" font-regular capitalize">{role}</div>;
     }
   },
   {

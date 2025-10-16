@@ -9,6 +9,13 @@ export function useUsers() {
   });
 }
 
+export function useWeeklyStats() {
+  return useQuery({
+    queryKey: ["weekly-stats"],
+    queryFn: () => api.getWeeklyStats()
+  });
+}
+
 export function useCreateUser() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -19,6 +26,7 @@ export function useCreateUser() {
     }) => api.createUser(user),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["weekly-stats"] });
     },
     onError: (error) => {
       console.error("Error creating user", error);
@@ -39,6 +47,7 @@ export function useUpdateUser() {
     }) => api.updateUser(user),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["weekly-stats"] });
     },
     onError: (error) => {
       console.error("Error updating user", error);
@@ -52,6 +61,7 @@ export function useDeleteUser() {
     mutationFn: (id: string) => api.deleteUser(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["weekly-stats"] });
     },
     onError: (error) => {
       console.error("Error deleting user", error);

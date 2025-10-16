@@ -18,23 +18,23 @@ import {
   ChartTooltip,
   ChartTooltipContent
 } from "@/components/ui/chart";
+import { useWeeklyStats } from "@/hooks/use-users";
 
-// Temporary mock data - will be replaced with API response
-const generateMockData = () => {
+// Generate empty graph data for the last 7 days
+const generateEmptyGraphData = () => {
   const data = [];
   for (let i = 6; i >= 0; i--) {
     const date = new Date();
     date.setDate(date.getDate() - i);
     data.push({
-      date: date.toISOString().split("T")[0],
-      admins: Math.floor(Math.random() * 8) + 2,
-      users: Math.floor(Math.random() * 25) + 10
+      date: date.toISOString().split("T")[0]!,
+      admins: 0,
+      users: 0,
+      total: 0
     });
   }
   return data;
 };
-
-const chartData = generateMockData();
 
 const chartConfig = {
   admins: {
@@ -48,14 +48,29 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export function WeeklyStatsChart() {
-  // Mock stats - will be from API
-  const stats = {
-    totalUsers: 40,
-    admins: 10,
-    users: 30,
-    active: 12,
-    inactive: 28
-  };
+  const { data: stats, isLoading, isError } = useWeeklyStats();
+
+  // Use empty data when loading, error, or no data available
+  const chartData = React.useMemo(() => {
+    if (isLoading || isError || !stats?.graphData) {
+      return generateEmptyGraphData();
+    }
+    return stats.graphData;
+  }, [stats, isLoading, isError]);
+
+  // Default stats when loading or error
+  const displayStats = React.useMemo(() => {
+    if (isLoading || isError || !stats) {
+      return {
+        totalUsers: 0,
+        admins: 0,
+        users: 0,
+        active: 0,
+        inactive: 0
+      };
+    }
+    return stats;
+  }, [stats, isLoading, isError]);
 
   return (
     <Card className="w-full">
@@ -63,7 +78,11 @@ export function WeeklyStatsChart() {
         <div className="flex flex-1 flex-col justify-center gap-1 px-6 pt-4 pb-3 sm:py-6">
           <CardTitle>Weekly Users Stats</CardTitle>
           <CardDescription>
-            Showing total users created over the last 7 days
+            {isLoading
+              ? "Loading stats..."
+              : isError
+              ? "Error loading stats"
+              : "Showing total users created over the last 7 days"}
           </CardDescription>
         </div>
 
@@ -73,14 +92,16 @@ export function WeeklyStatsChart() {
             <div className="w-3 h-3 bg-gray-300 rounded-sm"></div>
             <div className="flex flex-col">
               <span className="text-muted-foreground text-xs">Total Users</span>
-              <span className="text-2xl font-bold">{stats.totalUsers}</span>
+              <span className="text-2xl font-bold">
+                {displayStats.totalUsers}
+              </span>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <div className="w-3 h-3 bg-gray-800 rounded-sm"></div>
             <div className="flex flex-col">
               <span className="text-muted-foreground text-xs">Active</span>
-              <span className="text-2xl font-bold">{stats.active}</span>
+              <span className="text-2xl font-bold">{displayStats.active}</span>
             </div>
           </div>
         </div>
