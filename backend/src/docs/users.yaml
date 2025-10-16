@@ -1,0 +1,213 @@
+tags:
+  - name: Users
+    description: User management API
+
+paths:
+  /users:
+    get:
+      summary: List all Users
+      tags: [Users]
+      responses:
+        200:
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+    post:
+      summary: Create a new user
+      tags: [Users]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                role:
+                  type: string
+                  enum: [ADMIN, USER]
+                status:
+                  type: string
+                  enum: [ACTIVE, INACTIVE]
+      responses:
+        201:
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        400:
+          description: Validation error - invalid email, role, or status
+        409:
+          description: Conflict - a user with this email already exists
+
+  /users/weekly-stats:
+    get:
+      summary: Get weekly user statistics
+      tags: [Users]
+      responses:
+        200:
+          description: Weekly statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalUsers:
+                    type: integer
+                    description: Total number of users
+                  admins:
+                    type: integer
+                    description: Number of admin users
+                  users:
+                    type: integer
+                    description: Number of regular users
+                  active:
+                    type: integer
+                    description: Number of active users
+                  inactive:
+                    type: integer
+                    description: Number of inactive users
+                  graphData:
+                    type: array
+                    description: Daily statistics for the last 7 days
+                    items:
+                      type: object
+                      properties:
+                        date:
+                          type: string
+                          format: date
+                          description: Date in YYYY-MM-DD format
+                        admins:
+                          type: integer
+                          description: Number of admins created on this date
+                        users:
+                          type: integer
+                          description: Number of users created on this date
+                        total:
+                          type: integer
+                          description: Total users created on this date
+
+  /users/{id}:
+    put:
+      summary: Update a user by id
+      tags: [Users]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                role:
+                  type: string
+                  enum: [ADMIN, USER]
+                status:
+                  type: string
+                  enum: [ACTIVE, INACTIVE]
+      responses:
+        200:
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        400:
+          description: Validation error - invalid ID, email, role, or status
+        404:
+          description: User not found
+        409:
+          description: Conflict - a user with this email already exists
+    delete:
+      summary: Delete a user by id
+      tags: [Users]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: User deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        404:
+          description: User not found
+
+  /users/export:
+    get:
+      summary: Export users as protobuf
+      tags: [Users]
+      responses:
+        200:
+          description: Binary protobuf data
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        500:
+          description: Internal server error - protobuf verification failed
+
+  /users/publicKey:
+    get:
+      summary: Get RSA public key (.PEM)
+      tags: [Users]
+      responses:
+        200:
+          description: RSA public key (.PEM)
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /users/test/invalid:
+    post:
+      summary: Create a test user with invalid signature (dev only)
+      tags: [Users]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                role:
+                  type: string
+                  enum: [ADMIN, USER]
+                status:
+                  type: string
+                  enum: [ACTIVE, INACTIVE]
+                mode:
+                  type: string
+                  enum: [invalid, empty]
+                  description: Type of invalid signature to create
+      responses:
+        201:
+          description: Test user created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        403:
+          description: Forbidden - only available in non-production environments
