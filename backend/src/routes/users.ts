@@ -2,17 +2,19 @@ import express, { type Router } from "express";
 import { z } from "zod";
 
 import { validate } from "../middlewares/validate.js";
+import { sendSuccess } from "../utils/response.js";
+
 import {
   createUser,
   deleteUser,
   getUsers,
+  getWeeklyStats,
   updateUser
 } from "../services/user-service.js";
 import {
   createUserSchema,
   updateUserSchema
 } from "../validations/user.schema.js";
-import { sendSuccess } from "../utils/response.js";
 
 const router: Router = express.Router();
 
@@ -30,6 +32,14 @@ router.get("/", async (req, res, next) => {
   try {
     const users = await getUsers();
     sendSuccess(res, users, "Users retrieved successfully");
+  } catch (error) {
+    next(error);
+  }
+});
+router.get("/weekly-stats", async (req, res, next) => {
+  try {
+    const stats = await getWeeklyStats();
+    sendSuccess(res, stats, "Weekly stats retrieved successfully");
   } catch (error) {
     next(error);
   }

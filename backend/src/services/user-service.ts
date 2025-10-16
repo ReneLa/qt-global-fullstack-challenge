@@ -44,6 +44,74 @@ export async function getUsers() {
   return users;
 }
 
+export async function getWeeklyStats() {
+  // Get all users
+  const allUsers = await prisma.user.findMany({
+    select: {
+      role: true,
+      status: true,
+      createdAt: true
+    }
+  });
+
+  // Calculate summary statistics
+  const totalUsers = allUsers.length;
+  const admins = allUsers.filter((u) => u.role === "ADMIN").length;
+  const users = allUsers.filter((u) => u.role === "USER").length;
+  const active = allUsers.filter((u) => u.status === "ACTIVE").length;
+  const inactive = allUsers.filter((u) => u.status === "INACTIVE").length;
+
+  // Group by date for the last 7 days
+  const today = new Date();
+  const sevenDaysAgo = new Date(today);
+  sevenDaysAgo.setDate(today.getDate() - 6); // Last 7 days including today
+
+  // Create a map to store counts by date
+  const dateMap = new Map<string, { admins: number; users: number }>();
+
+  // Initialize all dates in the range
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(sevenDaysAgo);
+    date.setDate(sevenDaysAgo.getDate() + i);
+    const dateStr = date.toISOString().split("T")[0]!; // YYYY-MM-DD format
+    dateMap.set(dateStr, { admins: 0, users: 0 });
+  }
+
+  // Count users by date and role
+  allUsers.forEach((user) => {
+    const userDate = new Date(user.createdAt);
+    const dateStr = userDate.toISOString().split("T")[0]!;
+
+    if (dateMap.has(dateStr)) {
+      const counts = dateMap.get(dateStr)!;
+      if (user.role === "ADMIN") {
+        counts.admins++;
+      } else {
+        counts.users++;
+      }
+    }
+  });
+
+  // Convert map to graphData array
+  const graphData = Array.from(dateMap.entries()).map(
+    ([date, { admins, users }]) => ({
+      date,
+      admins,
+      users,
+      total: admins + users
+    })
+  );
+
+  return {
+    totalUsers,
+    admins,
+    users,
+    active,
+    inactive,
+    graphData
+  };
+}
+
 export async function updateUser(id: string, data: Partial<UserInput>) {
   const existingUser = await prisma.user.findUnique({
     where: { id }
