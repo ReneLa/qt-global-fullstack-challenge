@@ -121,6 +121,14 @@ export async function updateUser(id: string, data: Partial<UserInput>) {
     throw new NotFoundError("User not found");
   }
 
+  let updateData: {
+    email?: string;
+    role?: "ADMIN" | "USER";
+    status?: "ACTIVE" | "INACTIVE";
+    hash?: string;
+    signature?: string;
+  } = { ...data };
+
   if (data.email && data.email !== existingUser.email) {
     const emailExists = await prisma.user.findUnique({
       where: { email: data.email }
@@ -129,11 +137,16 @@ export async function updateUser(id: string, data: Partial<UserInput>) {
     if (emailExists) {
       throw new ConflictError("A user with this email already exists");
     }
+
+    const newHash = hashEmail(data.email);
+    const newSignature = signHash(newHash);
+    updateData.hash = newHash;
+    updateData.signature = newSignature;
   }
 
   const user = await prisma.user.update({
     where: { id },
-    data
+    data: updateData
   });
 
   logger.info(`User updated successfully: ${id}`);
