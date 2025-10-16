@@ -1,9 +1,13 @@
-import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import express from "express";
+
 import usersRouter from "./routes/users.js";
+import { initializeKeys } from "./utils/user-signing.js";
 
 dotenv.config();
+
+initializeKeys();
 
 const PORT = process.env.PORT || 4000;
 const app = express();
