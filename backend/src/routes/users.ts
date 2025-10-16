@@ -12,45 +12,53 @@ import {
   createUserSchema,
   updateUserSchema
 } from "../validations/user.schema.js";
-
-import logger from "../utils/logger.js";
+import { sendSuccess } from "../utils/response.js";
 
 const router: Router = express.Router();
 
-router.post("/", validate(createUserSchema, "body"), async (req, res) => {
-  const { email, role, status } = req.body;
-
-  const user = await createUser({ email, role, status });
-
-  res.json(user);
+router.post("/", validate(createUserSchema, "body"), async (req, res, next) => {
+  try {
+    const { email, role, status } = req.body;
+    const user = await createUser({ email, role, status });
+    sendSuccess(res, user, "User created successfully", 201);
+  } catch (error) {
+    next(error);
+  }
 });
 
-router.get("/", async (req, res) => {
-  const users = await getUsers();
-
-  return res.json(users);
+router.get("/", async (req, res, next) => {
+  try {
+    const users = await getUsers();
+    sendSuccess(res, users, "Users retrieved successfully");
+  } catch (error) {
+    next(error);
+  }
 });
 
 router.put(
   "/:id",
   validate(z.object({ id: z.string().uuid() }), "params"),
   validate(updateUserSchema, "body"),
-  async (req, res) => {
-    const { id } = req.params;
-    const { email, role, status } = req.body;
-    logger.info(id, "Updating user");
-    const user = await updateUser(id!, { email, role, status });
-
-    res.json(user);
+  async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const { email, role, status } = req.body;
+      const user = await updateUser(id!, { email, role, status });
+      sendSuccess(res, user, "User updated successfully");
+    } catch (error) {
+      next(error);
+    }
   }
 );
 
-router.delete("/:id", async (req, res) => {
-  const { id } = req.params;
-
-  const user = await deleteUser(id);
-
-  res.json(user);
+router.delete("/:id", async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const user = await deleteUser(id);
+    sendSuccess(res, user, "User deleted successfully");
+  } catch (error) {
+    next(error);
+  }
 });
 
 export default router;

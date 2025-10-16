@@ -14,13 +14,15 @@ export const validate =
         logger.error(err.issues, "Validation Error");
         return res.status(400).json({
           message: "Please check your input and try again",
-          errors: err.issues.map((e) => ({
-            field: e.path.join("."),
-            message: e.message
-          }))
+          status: 400,
+          data: {
+            errors: err.issues.map((e) => ({
+              field: e.path.join("."),
+              message: e.message
+            }))
+          }
         });
       }
       next(err);
     }
   };
-//   eb9ae45f-9005-4ce8-8e53-d69a1dcbd954
