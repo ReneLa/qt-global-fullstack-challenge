@@ -1,7 +1,7 @@
 import { User } from "@/components/users/columns";
 import { create } from "zustand";
 
-export type ModalType = "createUser";
+export type ModalType = "createUser" | "editUser" | "deleteUser";
 
 interface ModalData {
   user?: User;
