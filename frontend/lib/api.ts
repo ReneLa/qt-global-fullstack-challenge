@@ -1,17 +1,28 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
-async function fetchApi(path: string, options: RequestInit = {}) {
+interface ApiResponse<T = any> {
+  message: string;
+  status: number;
+  data?: T;
+}
+
+async function fetchApi<T = any>(
+  path: string,
+  options: RequestInit = {}
+): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, options);
+  const json: ApiResponse<T> = await response.json();
 
   if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+    throw new Error(json.message || `HTTP error! status: ${response.status}`);
   }
 
-  return response.json();
+  return json.data as T;
 }
 
 export const api = {
   getUsers: () => fetchApi("/users"),
+  getWeeklyStats: () => fetchApi("/users/weekly-stats"),
   createUser: ({
     email,
     role,
