@@ -1,4 +1,8 @@
+import type { User } from "@prisma/client";
 import express, { type Router } from "express";
+import path, { dirname } from "path";
+import protobuf from "protobufjs";
+import { fileURLToPath } from "url";
 import { z } from "zod";
 
 import { validate } from "../middlewares/validate.js";
@@ -15,6 +19,10 @@ import {
   createUserSchema,
   updateUserSchema
 } from "../validations/user.schema.js";
+
+// Define __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const router: Router = express.Router();
 
@@ -36,6 +44,7 @@ router.get("/", async (req, res, next) => {
     next(error);
   }
 });
+
 router.get("/weekly-stats", async (req, res, next) => {
   try {
     const stats = await getWeeklyStats();
@@ -43,6 +52,44 @@ router.get("/weekly-stats", async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+});
+
+// Export user as Protobuf binary/message
+router.get("/export", async (req, res) => {
+  const users = await getUsers();
+
+  //map to protobuf like format
+  const protoUsers = users.map((u: User) => ({
+    id: u.id,
+    email: u.email,
+    role: u.role,
+    status: u.status,
+    createdAt: u.createdAt.toISOString(),
+    hash: u.hash,
+    signature: u.signature
+  }));
+
+  const protoPath = path.join(__dirname, "..", "proto", "user.proto");
+  const root = await protobuf.load(protoPath);
+
+  const UserList = root.lookupType("UserList");
+
+  const payload = { users: protoUsers };
+
+  const err = UserList.verify(payload);
+
+  if (err) return res.status(500).send(err);
+
+  const buffer = UserList.encode(payload).finish();
+
+  res.setHeader("Content-Type", "application/octet-stream");
+  res.send(buffer);
+});
+
+// Public Key endpoint
+import { getPublicKeyPem } from "../utils/user-signing.js";
+router.get("/publicKey", (req, res) => {
+  res.type("text/plain").send(getPublicKeyPem());
 });
 
 router.put(
