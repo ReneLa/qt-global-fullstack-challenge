@@ -50,5 +50,33 @@ export const api = {
   deleteUser: (id: string) =>
     fetchApi(`/users/${id}`, {
       method: "DELETE"
-    })
+    }),
+
+  protoExportedUsers: async () => {
+    const response = await fetch(`${API_URL}/users/export`, {
+      headers: {
+        "Content-Type": "application/octet-stream"
+      }
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    console.log("Response", response);
+
+    return response.arrayBuffer();
+  },
+
+  getPublicKey: async () => {
+    const res = await fetch(`${API_URL}/users/publicKey`, {
+      headers: {
+        "Content-Type": "text/plain"
+      }
+    });
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+    console.log("Response Key", res);
+    return res.text();
+  }
 };

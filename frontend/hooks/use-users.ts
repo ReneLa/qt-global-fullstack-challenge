@@ -27,6 +27,7 @@ export function useCreateUser() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["weekly-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["verifiedUsers"] });
     },
     onError: (error) => {
       console.error("Error creating user", error);
@@ -48,6 +49,7 @@ export function useUpdateUser() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["weekly-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["verifiedUsers"] });
     },
     onError: (error) => {
       console.error("Error updating user", error);
