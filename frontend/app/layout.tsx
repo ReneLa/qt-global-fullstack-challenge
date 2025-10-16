@@ -4,6 +4,7 @@ import "./globals.css";
 
 import { ClientProvider } from "@/components/providers/api-provider";
 import { ModalProvider } from "@/components/providers/modal-provider";
+import { Toaster } from "@/components/ui";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,6 +34,7 @@ export default function RootLayout({
         <ClientProvider>
           <ModalProvider />
           {children}
+          <Toaster richColors />
         </ClientProvider>
       </body>
     </html>
