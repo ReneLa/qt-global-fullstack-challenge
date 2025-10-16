@@ -14,6 +14,8 @@ import {
 import { PlusIcon } from "lucide-react";
 import * as React from "react";
 
+import { useModal } from "@/hooks/use-modal-store";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -34,6 +36,7 @@ export function DataTable({
   data: User[];
   columns: ColumnDef<User>[];
 }) {
+  const { onOpen } = useModal();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -72,7 +75,11 @@ export function DataTable({
           }
           className="max-w-sm"
         />
-        <Button variant="outline" className="ml-auto">
+        <Button
+          variant="outline"
+          className="ml-auto"
+          onClick={() => onOpen("createUser")}
+        >
           <PlusIcon className="w-4 h-4" />
           Create User
         </Button>

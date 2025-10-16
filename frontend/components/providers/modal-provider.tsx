@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import { CreateUserModal } from "../users/create-user-modal";
+
 export const ModalProvider = () => {
   const [isMounted, setIsMounted] = useState(false);
 
@@ -13,5 +15,9 @@ export const ModalProvider = () => {
     return null;
   }
 
-  return <></>;
+  return (
+    <>
+      <CreateUserModal />
+    </>
+  );
 };
