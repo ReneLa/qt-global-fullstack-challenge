@@ -1,10 +1,23 @@
 import express, { type Router } from "express";
+import { z } from "zod";
 
-import { createUser, deleteUser, getUsers, updateUser } from "../services/user-service.js";
+import { validate } from "../middlewares/validate.js";
+import {
+  createUser,
+  deleteUser,
+  getUsers,
+  updateUser
+} from "../services/user-service.js";
+import {
+  createUserSchema,
+  updateUserSchema
+} from "../validations/user.schema.js";
+
+import logger from "../utils/logger.js";
 
 const router: Router = express.Router();
 
-router.post("/", async (req, res) => {
+router.post("/", validate(createUserSchema, "body"), async (req, res) => {
   const { email, role, status } = req.body;
 
   const user = await createUser({ email, role, status });
@@ -18,14 +31,19 @@ router.get("/", async (req, res) => {
   return res.json(users);
 });
 
-router.put("/:id", async (req, res) => {
-  const { id } = req.params;
-  const { email, role, status } = req.body;
+router.put(
+  "/:id",
+  validate(z.object({ id: z.string().uuid() }), "params"),
+  validate(updateUserSchema, "body"),
+  async (req, res) => {
+    const { id } = req.params;
+    const { email, role, status } = req.body;
+    logger.info(id, "Updating user");
+    const user = await updateUser(id!, { email, role, status });
 
-  const user = await updateUser(id, { email, role, status });
-
-  res.json(user);
-});
+    res.json(user);
+  }
+);
 
 router.delete("/:id", async (req, res) => {
   const { id } = req.params;

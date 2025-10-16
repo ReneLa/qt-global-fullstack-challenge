@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { hashEmail, signHash } from "../utils/user-signing.js";
+import logger from "../utils/logger.js";
 
 const prisma = new PrismaClient();
 
@@ -33,12 +34,15 @@ export async function createUser(userInput: UserInput) {
       signature
     }
   });
-
+  if (!user) {
+    throw new Error("Failed to create user");
+  }
   return user;
 }
 
 export async function getUsers() {
   const users = await prisma.user.findMany();
+  logger.info(`Found ${users.length} users`);
   return users;
 }
 
