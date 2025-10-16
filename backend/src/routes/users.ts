@@ -7,6 +7,7 @@ import { z } from "zod";
 
 import { validate } from "../middlewares/validate.js";
 import { sendSuccess } from "../utils/response.js";
+import { PrismaClient } from "@prisma/client";
 
 import {
   createUser,
@@ -54,6 +55,32 @@ router.get("/weekly-stats", async (req, res, next) => {
   }
 });
 
+router.put(
+  "/:id",
+  validate(z.object({ id: z.string().uuid() }), "params"),
+  validate(updateUserSchema, "body"),
+  async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const { email, role, status } = req.body;
+      const user = await updateUser(id!, { email, role, status });
+      sendSuccess(res, user, "User updated successfully");
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+router.delete("/:id", async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const user = await deleteUser(id);
+    sendSuccess(res, user, "User deleted successfully");
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Export user as Protobuf binary/message
 router.get("/export", async (req, res) => {
   const users = await getUsers();
@@ -92,27 +119,29 @@ router.get("/publicKey", (req, res) => {
   res.type("text/plain").send(getPublicKeyPem());
 });
 
-router.put(
-  "/:id",
-  validate(z.object({ id: z.string().uuid() }), "params"),
-  validate(updateUserSchema, "body"),
-  async (req, res, next) => {
-    try {
-      const { id } = req.params;
-      const { email, role, status } = req.body;
-      const user = await updateUser(id!, { email, role, status });
-      sendSuccess(res, user, "User updated successfully");
-    } catch (error) {
-      next(error);
-    }
-  }
-);
-
-router.delete("/:id", async (req, res, next) => {
+// Dev-only endpoint to create a user with non-verifiable signature for testing
+const __devPrisma = new PrismaClient();
+router.post("/test/invalid", async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const user = await deleteUser(id);
-    sendSuccess(res, user, "User deleted successfully");
+    if (process.env.NODE_ENV === "production") {
+      return res.status(403).send("Forbidden");
+    }
+
+    const { email, role, status, mode } = req.body as {
+      email: string;
+      role: "ADMIN" | "USER";
+      status: "ACTIVE" | "INACTIVE";
+      mode?: "invalid" | "empty";
+    };
+
+    const hash = mode === "empty" ? "" : "deadbeef";
+    const signature = mode === "empty" ? "" : "invalid";
+
+    const user = await __devPrisma.user.create({
+      data: { email, role, status, hash, signature }
+    });
+
+    sendSuccess(res, user, "Test user created", 201);
   } catch (error) {
     next(error);
   }
