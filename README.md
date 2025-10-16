@@ -1,0 +1,1 @@
+# qt-global-fullstack-challenge
