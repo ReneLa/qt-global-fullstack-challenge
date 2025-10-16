@@ -1,0 +1,34 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend
+    ports:
+      - "4000:4000"
+    environment:
+      - DATABASE_URL=file:/app/prisma/dev.db
+      - PORT=4000
+      - NODE_ENV=production
+    volumes:
+      - ./backend/prisma:/app/prisma
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: ./frontend/Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:4000}
+    container_name: frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
