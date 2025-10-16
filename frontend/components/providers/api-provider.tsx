@@ -30,7 +30,7 @@ function getQueryClient() {
   }
 }
 
-export function Providers(props: { children: React.ReactNode }) {
+export function ClientProvider(props: { children: React.ReactNode }) {
   const queryClient = getQueryClient();
 
   return (
