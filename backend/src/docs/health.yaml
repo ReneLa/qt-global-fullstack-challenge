@@ -1,0 +1,31 @@
+tags:
+  - name: Health
+    description: Server health monitoring
+
+paths:
+  /health:
+    get:
+      summary: Check server health status
+      tags: [Health]
+      description: Returns server health status, timestamp, and uptime. Used for monitoring and availability checks.
+      responses:
+        200:
+          description: Server is healthy and running
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                    description: Health status of the server
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: 2024-10-17T10:30:00.000Z
+                    description: Current server timestamp in ISO format
+                  uptime:
+                    type: number
+                    example: 3600.5
+                    description: Server uptime in seconds
