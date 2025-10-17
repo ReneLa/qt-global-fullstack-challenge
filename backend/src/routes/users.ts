@@ -18,8 +18,11 @@ import {
 } from "../services/user-service.js";
 import {
   createUserSchema,
-  updateUserSchema
+  updateUserSchema,
+  paginationSchema
 } from "../validations/user.schema.js";
+
+const __devPrisma = new PrismaClient();
 
 // Define __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -37,10 +40,18 @@ router.post("/", validate(createUserSchema, "body"), async (req, res, next) => {
   }
 });
 
-router.get("/", async (req, res, next) => {
+router.get("/", validate(paginationSchema, "query"), async (req, res, next) => {
   try {
-    const users = await getUsers();
-    sendSuccess(res, users, "Users retrieved successfully");
+    const page = Number(req.query.page as string) || 1;
+    const limit = Number(req.query.limit as string) || 10;
+    const result = await getUsers(page, limit);
+
+    res.json({
+      status: 200,
+      message: "Users retrieved successfully",
+      data: result.data,
+      pagination: result.pagination
+    });
   } catch (error) {
     next(error);
   }
@@ -81,36 +92,38 @@ router.delete("/:id", async (req, res, next) => {
   }
 });
 
-// Export user as Protobuf binary/message
+// Export users as Protobuf (defaults to all users with high limit)
 router.get("/export", async (req, res) => {
-  const users = await getUsers();
+  try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 1000;
 
-  //map to protobuf like format
-  const protoUsers = users.map((u: User) => ({
-    id: u.id,
-    email: u.email,
-    role: u.role,
-    status: u.status,
-    createdAt: u.createdAt.toISOString(),
-    hash: u.hash,
-    signature: u.signature
-  }));
+    const result = await getUsers(page, limit);
 
-  const protoPath = path.join(__dirname, "..", "proto", "user.proto");
-  const root = await protobuf.load(protoPath);
+    const protoUsers = result.data.map((u: User) => ({
+      id: u.id,
+      email: u.email,
+      role: u.role,
+      status: u.status,
+      createdAt: u.createdAt.toISOString(),
+      hash: u.hash,
+      signature: u.signature
+    }));
 
-  const UserList = root.lookupType("UserList");
+    const protoPath = path.join(__dirname, "..", "proto", "user.proto");
+    const root = await protobuf.load(protoPath);
+    const UserList = root.lookupType("UserList");
+    const payload = { users: protoUsers };
+    const err = UserList.verify(payload);
 
-  const payload = { users: protoUsers };
+    if (err) return res.status(500).send(err);
 
-  const err = UserList.verify(payload);
-
-  if (err) return res.status(500).send(err);
-
-  const buffer = UserList.encode(payload).finish();
-
-  res.setHeader("Content-Type", "application/octet-stream");
-  res.send(buffer);
+    const buffer = UserList.encode(payload).finish();
+    res.setHeader("Content-Type", "application/octet-stream");
+    res.send(buffer);
+  } catch (error) {
+    res.status(500).send("Error exporting users");
+  }
 });
 
 // Public Key endpoint
@@ -120,7 +133,6 @@ router.get("/publicKey", (req, res) => {
 });
 
 // Dev-only endpoint to create a user with non-verifiable signature for testing
-const __devPrisma = new PrismaClient();
 router.post("/test/invalid", async (req, res, next) => {
   try {
     if (process.env.NODE_ENV === "production") {
