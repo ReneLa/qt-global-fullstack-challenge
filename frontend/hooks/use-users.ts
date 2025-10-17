@@ -12,7 +12,9 @@ export function useUsers(params?: { page?: number; limit?: number }) {
 export function useWeeklyStats() {
   return useQuery({
     queryKey: ["weekly-stats"],
-    queryFn: () => api.getWeeklyStats()
+    queryFn: () => api.getWeeklyStats(),
+    staleTime: 0, // Always fetch fresh data
+    refetchOnMount: true // Refetch when component mounts
   });
 }
 
@@ -25,7 +27,6 @@ export function useCreateUser() {
       status: "ACTIVE" | "INACTIVE";
     }) => api.createUser(user),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["weekly-stats"] });
       queryClient.invalidateQueries({ queryKey: ["verifiedUsers"] });
     },
@@ -47,7 +48,6 @@ export function useUpdateUser() {
       };
     }) => api.updateUser(user),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["weekly-stats"] });
       queryClient.invalidateQueries({ queryKey: ["verifiedUsers"] });
     },
@@ -62,7 +62,7 @@ export function useDeleteUser() {
   return useMutation({
     mutationFn: (id: string) => api.deleteUser(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["verifiedUsers"] });
       queryClient.invalidateQueries({ queryKey: ["weekly-stats"] });
     },
     onError: (error) => {

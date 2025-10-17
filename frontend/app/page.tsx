@@ -4,10 +4,12 @@ import { columns, DataTable, WeeklyStatsChart } from "@/components/users";
 
 export default function Home() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] w-full max-w-4xl row-start-2 items-center sm:items-start">
-        <WeeklyStatsChart />
-        <DataTable columns={columns} />
+    <div className="min-h-screen">
+      <main className="container mx-auto px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+        <div className="flex flex-col gap-6 w-full max-w-3xl mx-auto">
+          <WeeklyStatsChart />
+          <DataTable columns={columns} />
+        </div>
       </main>
     </div>
   );

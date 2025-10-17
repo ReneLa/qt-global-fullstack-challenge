@@ -61,14 +61,14 @@ export function CreateUserModal() {
     <Dialog open={isModalOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit(onSubmit)}>
-          <DialogHeader>
+          <DialogHeader className="mb-6">
             <DialogTitle>Create User</DialogTitle>
             <DialogDescription>
               Create a new user with an email.
             </DialogDescription>
           </DialogHeader>
           <UserForm form={form} />
-          <DialogFooter>
+          <DialogFooter className="mt-6">
             <DialogClose asChild>
               <Button variant="outline" type="button">
                 Cancel

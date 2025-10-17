@@ -28,7 +28,7 @@ interface UserFormProps {
   isEditMode?: boolean;
 }
 
-export function UserForm({ form, isEditMode = false }: UserFormProps) {
+export function UserForm({ form }: UserFormProps) {
   const { control } = form;
 
   return (
@@ -45,7 +45,7 @@ export function UserForm({ form, isEditMode = false }: UserFormProps) {
                   id="email"
                   type="email"
                   placeholder="@example.com"
-                  disabled={isEditMode}
+                  // disabled={isEditMode}
                   {...field}
                 />
               </Field>

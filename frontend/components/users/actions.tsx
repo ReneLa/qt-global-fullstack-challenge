@@ -1,4 +1,5 @@
 import { MoreHorizontal, PencilIcon, TrashIcon } from "lucide-react";
+import { toast } from "sonner";
 
 import {
   Button,
@@ -8,10 +9,12 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui";
 import { User } from "./columns";
-import { useModal } from "@/hooks";
+import { useModal, useOnline } from "@/hooks";
 
 export const Actions = ({ user }: { user: User }) => {
   const { onOpen } = useModal();
+  const isOnline = useOnline();
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -21,16 +24,37 @@ export const Actions = ({ user }: { user: User }) => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => onOpen("editUser", { user })} className="text-blue-500 hover:text-blue-500">
-          <PencilIcon className="size-4 text-blue-500 hover:text-blue-500" />
-          Update
+        <DropdownMenuItem
+          onClick={() => {
+            if (!isOnline) {
+              toast.error("You have no connection");
+              return;
+            }
+            onOpen("editUser", { user });
+          }}
+          disabled={!isOnline}
+          className="group cursor-pointer"
+        >
+          <PencilIcon className="size-4 text-muted-foreground group-hover:text-blue-500 transition-colors" />
+          <span className="group-hover:text-blue-500 transition-colors">
+            Update
+          </span>
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() => onOpen("deleteUser", { user })}
-          className="text-destructive hover:text-destructive"
+          onClick={() => {
+            if (!isOnline) {
+              toast.error("You have no connection");
+              return;
+            }
+            onOpen("deleteUser", { user });
+          }}
+          disabled={!isOnline}
+          className="group cursor-pointer focus:bg-destructive/10 focus:text-destructive"
         >
-          <TrashIcon className="size-4 text-destructive hover:text-destructive" />
-          Delete
+          <TrashIcon className="size-4 text-muted-foreground group-hover:text-destructive transition-colors" />
+          <span className="group-hover:text-destructive transition-colors">
+            Delete
+          </span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

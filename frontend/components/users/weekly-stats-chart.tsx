@@ -75,9 +75,11 @@ export function WeeklyStatsChart() {
   return (
     <Card className="w-full">
       <CardHeader className="flex flex-col items-stretch border-b !p-0 sm:flex-row">
-        <div className="flex flex-1 flex-col justify-center gap-1 px-6 pt-4 pb-3 sm:py-6">
-          <CardTitle>Weekly Users Stats</CardTitle>
-          <CardDescription>
+        <div className="flex flex-1 flex-col justify-center gap-0.5 px-4 py-2 sm:px-5 sm:py-2">
+          <CardTitle className="text-base sm:text-lg font-medium">
+            Weekly Users Stats
+          </CardTitle>
+          <CardDescription className="text-[11px] sm:text-xs">
             {isLoading
               ? "Loading stats..."
               : isError
@@ -86,38 +88,45 @@ export function WeeklyStatsChart() {
           </CardDescription>
         </div>
 
-        {/* Top-level stats like in the image */}
-        <div className="flex gap-8 px-6 py-4 sm:px-8">
-          <div className="flex items-center gap-3">
-            <div className="w-3 h-3 bg-gray-300 rounded-sm"></div>
+        <div className="flex gap-3 sm:gap-6 px-4 py-2 sm:px-5 sm:py-2 border-t sm:border-t-0 sm:border-l">
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 bg-gray-300 rounded-sm shrink-0"></div>
             <div className="flex flex-col">
-              <span className="text-muted-foreground text-xs">Total Users</span>
-              <span className="text-2xl font-bold">
+              <span className="text-muted-foreground text-[10px] sm:text-xs">
+                Total Users
+              </span>
+              <span className="text-lg sm:text-2xl font-bold">
                 {displayStats.totalUsers}
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="w-3 h-3 bg-gray-800 rounded-sm"></div>
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 bg-gray-800 rounded-sm shrink-0"></div>
             <div className="flex flex-col">
-              <span className="text-muted-foreground text-xs">Active</span>
-              <span className="text-2xl font-bold">{displayStats.active}</span>
+              <span className="text-muted-foreground text-[10px] sm:text-xs">
+                Active
+              </span>
+              <span className="text-lg sm:text-2xl font-bold">
+                {displayStats.active}
+              </span>
             </div>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="px-2 sm:p-6">
+      <CardContent className="p-3 sm:p-4">
         <ChartContainer
           config={chartConfig}
-          className="aspect-auto h-[250px] w-full"
+          className="aspect-auto h-[120px] sm:h-[250px] w-full"
         >
           <BarChart
             accessibilityLayer
             data={chartData}
             margin={{
-              left: 12,
-              right: 12
+              left: 4,
+              right: 4,
+              top: 4,
+              bottom: 4
             }}
           >
             <CartesianGrid vertical={false} />
@@ -125,8 +134,9 @@ export function WeeklyStatsChart() {
               dataKey="date"
               tickLine={false}
               axisLine={false}
-              tickMargin={8}
+              tickMargin={6}
               minTickGap={32}
+              tick={{ fontSize: 10 }}
               tickFormatter={(value) => {
                 const date = new Date(value);
                 return date.toLocaleDateString("en-US", {
@@ -138,7 +148,7 @@ export function WeeklyStatsChart() {
             <ChartTooltip
               content={
                 <ChartTooltipContent
-                  className="w-[200px]"
+                  className="w-[140px] sm:w-[180px]"
                   labelFormatter={(value) => {
                     return new Date(value).toLocaleDateString("en-US", {
                       month: "short",

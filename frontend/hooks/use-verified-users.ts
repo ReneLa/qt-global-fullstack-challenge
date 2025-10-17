@@ -68,6 +68,8 @@ export function useVerifiedUsers(params?: { page?: number; limit?: number }) {
   return useQuery<VerifiedUsersResponse, Error>({
     queryKey: ["verifiedUsers", params?.page, params?.limit],
     queryFn: () => fetchVerifiedUsers(params),
-    retry: false
+    retry: false,
+    staleTime: 0, // Always fetch fresh data
+    refetchOnMount: true // Refetch when component mounts
   });
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ColumnDef,
   ColumnFiltersState,
   flexRender,
   getCoreRowModel,
@@ -12,37 +13,50 @@ import {
 } from "@tanstack/react-table";
 import { PlusIcon } from "lucide-react";
 import * as React from "react";
+import { toast } from "sonner";
 
+import { useVerifiedUsers, useOnline } from "@/hooks";
 import { useModal } from "@/hooks/use-modal-store";
-import { useUsers, useVerifiedUsers } from "@/hooks";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
+  Button,
+  Input,
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Spinner,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow
-} from "@/components/ui/table";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationPrevious,
-  PaginationNext,
-  PaginationLink,
-  PaginationEllipsis
-} from "@/components/ui/pagination";
-import { ColumnDef } from "@tanstack/react-table";
+} from "@/components/ui";
+
 import { User } from "./columns";
 
 export function DataTable({ columns }: { columns: ColumnDef<User>[] }) {
   const { onOpen } = useModal();
+  const isOnline = useOnline();
   const [page, setPage] = React.useState(1);
   const [limit, setLimit] = React.useState(10);
-  const { data: verifiedData, isLoading } = useVerifiedUsers({ page, limit });
+  const {
+    data: verifiedData,
+    isLoading,
+    isError
+  } = useVerifiedUsers({
+    page,
+    limit
+  });
 
   const data = verifiedData?.users || [];
   const pagination = verifiedData?.pagination;
@@ -75,34 +89,86 @@ export function DataTable({ columns }: { columns: ColumnDef<User>[] }) {
     pageCount: pagination?.totalPages ?? 0
   });
 
+  function getEmptyStateMessage() {
+    // Check if there's a network error or user is offline
+    if (isError || !isOnline) {
+      return (
+        <div className="flex flex-col items-center gap-2 text-muted-foreground">
+          <p className="font-medium">Connection issue</p>
+          <p className="text-sm">
+            Unable to load users. Please check your internet connection and try
+            again.
+          </p>
+        </div>
+      );
+    }
+
+    // Check if email filter is applied
+    const emailFilter = table.getColumn("email")?.getFilterValue() as string;
+    if (emailFilter) {
+      return (
+        <div className="flex flex-col items-center gap-2 text-muted-foreground">
+          <p className="font-medium">No matching results</p>
+          <p className="text-sm">
+            No users found matching &quot;{emailFilter}&quot;. Try adjusting
+            your filter.
+          </p>
+        </div>
+      );
+    }
+
+    // No data at all
+    return (
+      <div className="flex flex-col items-center gap-2 text-muted-foreground">
+        <p className="font-medium">No users yet</p>
+        <p className="text-sm">
+          Get started by creating your first user account.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full">
-      <div className="flex items-center py-4">
+    <div className="w-full space-y-4">
+      <div>
+        <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+          Verified user accounts
+        </p>
+      </div>
+
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <Input
           placeholder="Filter emails..."
           value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
             table.getColumn("email")?.setFilterValue(event.target.value)
           }
-          className="max-w-sm"
+          className="w-full sm:max-w-xs"
         />
         <Button
           variant="outline"
-          className="ml-auto"
-          onClick={() => onOpen("createUser")}
+          className="sm:ml-auto w-full sm:w-auto"
+          onClick={() => {
+            if (!isOnline) {
+              toast.error("You have no connection");
+              return;
+            }
+            onOpen("createUser");
+          }}
+          disabled={!isOnline}
         >
           <PlusIcon className="w-4 h-4" />
           Create User
         </Button>
       </div>
-      <div className="overflow-hidden rounded-md border">
+      <div className="overflow-x-auto rounded-md border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead key={header.id} className="whitespace-nowrap">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -116,14 +182,26 @@ export function DataTable({ columns }: { columns: ColumnDef<User>[] }) {
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                    <Spinner className="size-5" />
+                    <span>Loading users...</span>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} className="whitespace-nowrap">
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
@@ -138,7 +216,7 @@ export function DataTable({ columns }: { columns: ColumnDef<User>[] }) {
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  {getEmptyStateMessage()}
                 </TableCell>
               </TableRow>
             )}
@@ -147,33 +225,42 @@ export function DataTable({ columns }: { columns: ColumnDef<User>[] }) {
       </div>
       {pagination && pagination.total > 10 && (
         <div className="flex flex-col gap-4 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">
+              <span className="text-xs sm:text-sm text-muted-foreground">
                 Showing {data.length > 0 ? (page - 1) * limit + 1 : 0} to{" "}
                 {Math.min(page * limit, pagination.total)} of {pagination.total}{" "}
                 users
               </span>
             </div>
 
-            <select
-              value={limit}
-              onChange={(e) => {
-                setLimit(Number(e.target.value));
-                setPage(1);
-              }}
-              className="border rounded px-2 py-1 text-sm"
-              aria-label="Items per page"
-            >
-              <option value={5}>5 per page</option>
-              <option value={10}>10 per page</option>
-              <option value={20}>20 per page</option>
-              <option value={50}>50 per page</option>
-            </select>
+            <div className="flex items-center gap-2">
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Rows per page
+              </p>
+              <Select
+                onValueChange={(value) => {
+                  setLimit(Number(value));
+                  setPage(1);
+                }}
+                value={`${limit}`}
+              >
+                <SelectTrigger className="h-8 w-[70px]">
+                  <SelectValue placeholder={limit} />
+                </SelectTrigger>
+                <SelectContent side="top">
+                  {[5, 10, 20, 50].map((pageSize) => (
+                    <SelectItem key={pageSize} value={`${pageSize}`}>
+                      {pageSize}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <Pagination>
-            <PaginationContent>
+            <PaginationContent className="flex-wrap">
               <PaginationItem>
                 <PaginationPrevious
                   href="#"
