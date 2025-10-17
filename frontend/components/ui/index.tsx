@@ -12,3 +12,4 @@ export * from "./separator";
 export * from "./sonner";
 export * from "./spinner";
 export * from "./table";
+export * from "./pagination";
