@@ -1,37 +1,59 @@
 # Backend
 
+Express API server with Prisma ORM and SQLite database.
+
 ## Setup
+
+**Requirements:** Node.js 22+ and pnpm
 
 ```bash
 # Install dependencies
 pnpm install
 
-# Setup environment
-cp .env.example .env
-
-# Setup database
-npx prisma migrate dev
+# Generate Prisma client
 npx prisma generate
+
+# Run migrations
+npx prisma migrate dev
 ```
 
-## Run
+## Development
 
 ```bash
-# Development
+# Start dev server (hot reload)
 pnpm dev
+```
 
-# Production
+Server runs on http://localhost:4000
+
+## Production Build
+
+```bash
 pnpm build
 pnpm start
 ```
 
-## Scripts
+## Useful Commands
 
-- `pnpm dev` - Start dev server with hot reload
-- `pnpm build` - Build for production
-- `pnpm start` - Run production build
-- `npx prisma studio` - Open database GUI
-- `npx prisma migrate dev` - Create/apply migrations
-- `npx prisma generate` - Regenerate Prisma client
+```bash
+# Open database GUI
+npx prisma studio
 
-Server runs on `http://localhost:4000`
+# Create new migration
+npx prisma migrate dev --name migration_name
+
+# Reset database
+npx prisma migrate reset
+```
+
+## API Documentation
+
+Once running, visit http://localhost:4000/docs for Swagger docs.
+
+## Key Features
+
+- RESTful user CRUD operations
+- Protobuf export endpoint (`/users/export`)
+- RSA signature verification
+- Weekly stats aggregation
+- Request validation with Zod
