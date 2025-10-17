@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -30,7 +30,10 @@ export function EditUserModal() {
     }
   });
 
-  const { handleSubmit, reset } = form;
+  const { handleSubmit, reset, watch } = form;
+
+  // Watch all form values
+  const formValues = watch();
 
   const isModalOpen = isOpen && type === "editUser";
   const user = data.user;
@@ -46,6 +49,17 @@ export function EditUserModal() {
     }
   }, [user, reset]);
 
+  // Check if form values have changed
+  const hasChanges = useMemo(() => {
+    if (!user) return false;
+
+    return (
+      formValues.email !== user.email ||
+      formValues.role !== user.role ||
+      formValues.status !== user.status
+    );
+  }, [formValues, user]);
+
   const handleClose = useCallback(() => {
     reset();
     onClose();
@@ -55,7 +69,20 @@ export function EditUserModal() {
     (formData: UserFormValues) => {
       if (!user?.id) return;
 
-      toast.promise(updateUser({ id: user.id, data: formData }), {
+      // Only send changed fields
+      const changedData: Partial<UserFormValues> = {};
+
+      if (formData.email !== user.email) {
+        changedData.email = formData.email;
+      }
+      if (formData.role !== user.role) {
+        changedData.role = formData.role;
+      }
+      if (formData.status !== user.status) {
+        changedData.status = formData.status;
+      }
+
+      toast.promise(updateUser({ id: user.id, data: changedData }), {
         loading: "Updating user...",
         success: () => {
           handleClose();
@@ -67,7 +94,7 @@ export function EditUserModal() {
         }
       });
     },
-    [user?.id, updateUser, handleClose]
+    [user, updateUser, handleClose]
   );
 
   return (
@@ -78,13 +105,13 @@ export function EditUserModal() {
             <DialogTitle>Edit User</DialogTitle>
           </DialogHeader>
           <UserForm form={form} isEditMode />
-          <DialogFooter>
+          <DialogFooter className="mt-6">
             <DialogClose asChild>
               <Button variant="outline" type="button">
                 Cancel
               </Button>
             </DialogClose>
-            <Button type="submit" disabled={isPending}>
+            <Button type="submit" disabled={isPending || !hasChanges}>
               {isPending ? (
                 <>
                   <Spinner /> Updating...
