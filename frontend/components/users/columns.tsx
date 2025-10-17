@@ -1,7 +1,8 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, Mail } from "lucide-react";
+import { format } from "date-fns";
+import { ArrowUpDown, Calendar, Mail } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Actions } from "./actions";
@@ -30,7 +31,43 @@ const formatText = (text: string): string => {
   return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
 };
 
+const formatDate = (dateString: string): string => {
+  try {
+    const date = new Date(dateString);
+    const now = new Date();
+    return format(date, "MMM d, yyyy 'at' h:mm a");
+  } catch {
+    return dateString;
+  }
+};
+
 export const columns: ColumnDef<User>[] = [
+  {
+    accessorKey: "createdAt",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Created
+          <ArrowUpDown />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const dateString = row.getValue("createdAt") as string;
+      return (
+        <div className="flex items-center gap-2">
+          <Calendar
+            strokeWidth={2}
+            className="h-4 w-4 text-muted-foreground shrink-0"
+          />
+          <span className="text-sm">{formatDate(dateString)}</span>
+        </div>
+      );
+    }
+  },
   {
     accessorKey: "email",
     header: ({ column }) => {
