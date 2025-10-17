@@ -2,10 +2,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { api } from "@/lib/api";
 
-export function useUsers() {
+export function useUsers(params?: { page?: number; limit?: number }) {
   return useQuery({
-    queryKey: ["users"],
-    queryFn: () => api.getUsers()
+    queryKey: ["users", params?.page, params?.limit],
+    queryFn: () => api.getUsers(params)
   });
 }
 

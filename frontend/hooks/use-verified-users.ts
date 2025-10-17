@@ -14,36 +14,60 @@ interface User {
   signature: string;
 }
 
-async function fetchVerifiedUsers(): Promise<User[]> {
+interface VerifiedUsersResponse {
+  users: User[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}
+
+async function fetchVerifiedUsers(params?: {
+  page?: number;
+  limit?: number;
+}): Promise<VerifiedUsersResponse> {
   try {
-    const [buffer, publicKeyPem] = await Promise.all([
+    const [buffer, publicKeyPem, paginatedUsers] = await Promise.all([
       api.protoExportedUsers(),
-      api.getPublicKey()
+      api.getPublicKey(),
+      api.getUsers(params)
     ]);
 
     const usersData = await decodeUserList(buffer);
     const publicKey = await importPublicKey(publicKeyPem);
 
-    const users = usersData.users || [];
+    // Get all users from protobuf for signature verification
+    const allUsers = usersData.users || [];
+    const verificationMap = new Map<string, boolean>();
 
-    const verifiedUsers: User[] = [];
-
-    for (const user of users as User[]) {
+    // Verify all users
+    for (const user of allUsers as User[]) {
       const ok = await verifySignature(publicKey, user.hash, user.signature);
-
-      if (ok) verifiedUsers.push(user);
+      verificationMap.set(user.id, ok);
     }
 
-    return verifiedUsers;
+    // Filter paginated users based on verification
+    const verifiedUsers = (paginatedUsers.data as User[]).filter(
+      (user) => verificationMap.get(user.id) === true
+    );
+
+    return {
+      users: verifiedUsers,
+      pagination: paginatedUsers.pagination
+    };
   } catch (error) {
     throw error;
   }
 }
 
-export function useVerifiedUsers() {
-  return useQuery<User[], Error>({
-    queryKey: ["verifiedUsers"],
-    queryFn: fetchVerifiedUsers,
+export function useVerifiedUsers(params?: { page?: number; limit?: number }) {
+  return useQuery<VerifiedUsersResponse, Error>({
+    queryKey: ["verifiedUsers", params?.page, params?.limit],
+    queryFn: () => fetchVerifiedUsers(params),
     retry: false
   });
 }

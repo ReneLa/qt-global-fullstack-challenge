@@ -1,17 +1,11 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
-interface ApiResponse<T = any> {
-  message: string;
-  status: number;
-  data?: T;
-}
-
 async function fetchApi<T = any>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, options);
-  const json: ApiResponse<T> = await response.json();
+  const json = await response.json();
 
   if (!response.ok) {
     throw new Error(json.message || `HTTP error! status: ${response.status}`);
@@ -21,7 +15,26 @@ async function fetchApi<T = any>(
 }
 
 export const api = {
-  getUsers: () => fetchApi("/users"),
+  getUsers: async (params?: { page?: number; limit?: number }) => {
+    const query = new URLSearchParams();
+    if (params?.page) query.set("page", String(params.page));
+    if (params?.limit) query.set("limit", String(params.limit));
+    
+    const response = await fetch(
+      `${API_URL}/users?${query}`,
+      { headers: { "Content-Type": "application/json" } }
+    );
+    const json = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(json.message || "Failed to fetch users");
+    }
+    
+    return {
+      data: json.data,
+      pagination: json.pagination
+    };
+  },
   getWeeklyStats: () => fetchApi("/users/weekly-stats"),
   createUser: ({
     email,
@@ -62,8 +75,6 @@ export const api = {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    console.log("Response", response);
-
     return response.arrayBuffer();
   },
 
@@ -76,7 +87,6 @@ export const api = {
     if (!res.ok) {
       throw new Error(`HTTP error! status: ${res.status}`);
     }
-    console.log("Response Key", res);
     return res.text();
   }
 };
