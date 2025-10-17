@@ -1,8 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 
+import { ConflictError, NotFoundError } from "../utils/errors.js";
 import logger from "../utils/logger.js";
 import { hashEmail, signHash } from "../utils/user-signing.js";
-import { ConflictError, NotFoundError } from "../utils/errors.js";
 
 const prisma = new PrismaClient();
 
@@ -38,10 +38,33 @@ export async function createUser(userInput: UserInput) {
   return user;
 }
 
-export async function getUsers() {
-  const users = await prisma.user.findMany();
-  logger.info(`Found ${users.length} users`);
-  return users;
+export async function getUsers(page = 1, limit = 10) {
+  const skip = (page - 1) * limit;
+  const total = await prisma.user.count();
+
+  const users = await prisma.user.findMany({
+    skip,
+    take: limit,
+    orderBy: { createdAt: "desc" }
+  });
+
+  const totalPages = Math.ceil(total / limit);
+
+  logger.info(
+    `Found ${users.length} users (page ${page}/${totalPages}, total: ${total})`
+  );
+
+  return {
+    data: users,
+    pagination: {
+      total,
+      page,
+      limit,
+      totalPages,
+      hasNext: page < totalPages,
+      hasPrev: page > 1
+    }
+  };
 }
 
 export async function getWeeklyStats() {
@@ -159,6 +182,7 @@ export async function deleteUser(id: string) {
   });
 
   if (!existingUser) {
+    logger.error(`User not found: ${id}`);
     throw new NotFoundError("User not found");
   }
 

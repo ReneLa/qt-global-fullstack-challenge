@@ -15,5 +15,11 @@ export const updateUserSchema = z.object({
   status: StatusEnum.optional()
 });
 
+export const paginationSchema = z.object({
+  page: z.coerce.number().int().positive().optional().default(1),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(10)
+});
+
 export type CreateUserSchema = z.infer<typeof createUserSchema>;
 export type UpdateUserSchema = z.infer<typeof updateUserSchema>;
+export type PaginationSchema = z.infer<typeof paginationSchema>;

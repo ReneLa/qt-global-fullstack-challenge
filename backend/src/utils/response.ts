@@ -4,18 +4,21 @@ interface ApiResponse<T = any> {
   message: string;
   status: number;
   data?: T;
+  [key: string]: any; // Allow additional metadata fields
 }
 
 export const sendSuccess = <T>(
   res: Response,
   data: T,
   message = "Success",
-  statusCode = 200
+  statusCode = 200,
+  metadata?: Record<string, any>
 ) => {
   const response: ApiResponse<T> = {
     message,
     status: statusCode,
-    data
+    data,
+    ...metadata
   };
   return res.status(statusCode).json(response);
 };
