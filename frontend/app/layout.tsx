@@ -1,25 +1,18 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-import { siteConfig } from "@/config/site";
 import { ibmPlexSans } from "@/config/fonts";
+import { siteConfig } from "@/config/site";
 
+import { Header } from "@/components/header";
+import { ErrorBoundary } from "@/components/error-boundary";
+import { NetworkStatus } from "@/components/network-status";
 import { ClientProvider } from "@/components/providers/api-provider";
 import { ModalProvider } from "@/components/providers/modal-provider";
+import { ServerHealthProvider } from "@/components/providers/server-health-provider";
+import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Toaster } from "@/components/ui";
 import { cn } from "@/lib/utils";
-import { ThemeProvider } from "@/components/providers/theme-provider";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"]
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"]
-});
 
 export const metadata: Metadata = {
   title: {
@@ -38,20 +31,26 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={cn(ibmPlexSans.className, "antialiased")}>
-        <ClientProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="dark"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <ModalProvider />
-            {children}
-            <Toaster richColors />
-          </ThemeProvider>
-        </ClientProvider>
+        <ErrorBoundary>
+          <ClientProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="dark"
+              enableSystem
+              disableTransitionOnChange
+            >
+              <ServerHealthProvider>
+                <NetworkStatus />
+                <Header />
+                <ModalProvider />
+                {children}
+                <Toaster richColors />
+              </ServerHealthProvider>
+            </ThemeProvider>
+          </ClientProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );
