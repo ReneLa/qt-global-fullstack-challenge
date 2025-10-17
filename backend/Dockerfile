@@ -13,6 +13,9 @@ COPY src ./src
 COPY tsconfig.json ./
 RUN pnpm build
 
+# Copy the docs directory to dist after build
+RUN mkdir -p dist/docs && cp -r src/docs/*.yaml dist/docs/
+
 FROM node:22-alpine AS production
 
 RUN npm install -g pnpm@10.14.0
