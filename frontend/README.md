@@ -42,7 +42,7 @@ pnpm start
 ## Tech Stack
 
 - **Framework:** Next.js 15 with App Router
-- **UI:** Radix UI + TailwindCSS v4
+- **UI:** Shadcn UI + TailwindCSS v4
 - **State:** React Query + Zustand
 - **Forms:** React Hook Form + Zod
 - **Charts:** Recharts
