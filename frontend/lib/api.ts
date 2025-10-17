@@ -19,17 +19,16 @@ export const api = {
     const query = new URLSearchParams();
     if (params?.page) query.set("page", String(params.page));
     if (params?.limit) query.set("limit", String(params.limit));
-    
-    const response = await fetch(
-      `${API_URL}/users?${query}`,
-      { headers: { "Content-Type": "application/json" } }
-    );
+
+    const response = await fetch(`${API_URL}/users?${query}`, {
+      headers: { "Content-Type": "application/json" }
+    });
     const json = await response.json();
-    
+
     if (!response.ok) {
       throw new Error(json.message || "Failed to fetch users");
     }
-    
+
     return {
       data: json.data,
       pagination: json.pagination
@@ -88,5 +87,18 @@ export const api = {
       throw new Error(`HTTP error! status: ${res.status}`);
     }
     return res.text();
+  },
+
+  healthCheck: async () => {
+    const response = await fetch(`${API_URL}/health`, {
+      method: "GET",
+      signal: AbortSignal.timeout(5000) // 5s timeout
+    });
+
+    if (!response.ok) {
+      throw new Error(`Server health check failed: ${response.status}`);
+    }
+
+    return response.json();
   }
 };
