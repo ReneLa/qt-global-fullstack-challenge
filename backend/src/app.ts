@@ -25,7 +25,14 @@ app.get("/", (req, res) => {
   res.send("API server is running. Visit /docs for API documentation.");
 });
 
-// Error handler must be last
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
 app.use(errorHandler);
 
 app.listen(PORT, () => {
