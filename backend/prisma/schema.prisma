@@ -29,4 +29,9 @@ model User {
   createdAt DateTime @default(now())
   hash String
   signature String
+
+  @@index([createdAt])           // For date-based queries
+  @@index([role])                // For role filtering
+  @@index([status])              // For status filtering
+  @@index([createdAt, role])     // Composite index for weekly stats
 }
